@@ -21,7 +21,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.cluster import KMeans, MiniBatchKMeans
 
-# test 2
 
 # extract features
 def followee_per_follower_ratio(user_data):
@@ -164,7 +163,6 @@ def posts_features(user, posts):
         number_of_posts_favourite(posts)
     ]
         
-        
 
 # preprocess tweets data
 def preprocess_tweets_data(tweets_data):
@@ -172,6 +170,39 @@ def preprocess_tweets_data(tweets_data):
     return [re.sub(r'\w+:\/{2}[\d\w-]+(\.[\d\w-]+)*(?:(?:\/[^\s/]*))*', '', tweet, flags=re.MULTILINE) for tweet in tweets_data]
 
 # read and write data
+def read_json_file(folder):
+    filepaths = [join(folder, f) for f in listdir(folder) if isfile(join(folder, f)) and f.endswith('.json')]
+    
+    tweets_data = []
+    
+    for filepath in filepaths:
+        with open(filepath, 'r') as f:
+            for line in f:
+                tweet = json.loads(line)
+                tweets_data.append(tweet['text'])
+    return tweets_data
+
+def preprocess_tweet(tweets_data):
+    
+    # clean url links
+    tweets = [re.sub(r'\w+:\/{2}[\d\w-]+(\.[\d\w-]+)*(?:(?:\/[^\s/]*))*', '', tweet, flags=re.MULTILINE) for tweet in tweets_data]
+    
+    # tokenize tweet data
+    tokenizer = RegexpTokenizer(r'\w+')
+    tokens = [tokenizer.tokenize(tweet.lower()) for tweet in tweets]
+    
+    # remove stop words from token
+    en_stop = get_stop_words('en')
+    uni_grams = [i for token in tokens for i in token if len(i)==1]
+    bi_grams = [i for token in tokens for i in token if len(i)==2]
+    stoplist  = set(en_stop + uni_grams + bi_grams)
+    tokens = [[i for i in token if i not in stoplist] for token in tokens]
+    
+    # remove numbers
+    tokens = [[i for i in token if len(i.strip(digits)) == len(i)] for token in tokens]
+    
+    return tokens
+
 def read_tweets_data(folder):
     filepaths = [join(folder, f) for f in listdir(folder) if isfile(join(folder, f)) and f.endswith('.json')]
     
